@@ -1,29 +1,27 @@
-VSN          := 0.1
-ERL          ?= erl
-EBIN_DIRS    := $(wildcard lib/*/ebin)
-APP          := erlirc
+.PHONY: rel deps test
 
-all: erl ebin/$(APP).app
+all: deps compile
 
-erl: ebin lib
-	@$(ERL) -pa $(EBIN_DIRS) -noinput +B \
-	  -eval 'case make:all() of up_to_date -> halt(0); error -> halt(1) end.'
+compile:
+	@./rebar compile
+
+app:
+	@./rebar compile skip_deps=true
+
+deps:
+	@./rebar get-deps
 
 docs:
-	@erl -noshell -run edoc_run application '$(APP)' '"."' '[]'
+	@./rebar doc
 
-clean: 
-	@echo "removing:"
-	@rm -fv ebin/*.beam ebin/*.app
+clean:
+	@./rebar clean
 
-ebin/$(APP).app: src/$(APP).app
-	@cp -v src/$(APP).app $@
+distclean: clean
+	@./rebar delete-deps
 
-ebin:
-	@mkdir ebin
-
-lib:
-	@mkdir lib
+test: all
+	@./rebar skip_deps=true eunit
 
 dialyzer: erl
 	@dialyzer -c ebin
